@@ -1,0 +1,62 @@
+@SIEGWebApplication_HostAddress = http://localhost:5266
+# Substitua pelo ID de um documento criado nos testes
+@FiscalDocumentId = 00000000-0000-0000-0000-000000000000
+@Cnpj = 07689002000189
+
+@UrlBase = api/v1/fiscal-documents
+
+### 1. Listar Documentos (Com paginação e filtros opcionais)
+GET {{SIEGWebApplication_HostAddress}}/{{UrlBase}}?page=1&pageSize=10&cnpj={{Cnpj}}&uf=SP
+Accept: application/json
+
+### 2. Consultar Detalhes de um Documento Específico
+GET {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/{{FiscalDocumentId}}
+Accept: application/json
+
+### 3. Obter o XML Bruto de um Documento
+GET {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/{{FiscalDocumentId}}/xml
+Accept: application/xml
+
+### 4. Enviar XML para Processamento (Corpo da Requisição)
+POST {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/xml
+Content-Type: application/xml
+
+<loteRFBNFe xmlns="http://www.portalfiscal.inf.br/nfe">
+    <!-- Conteúdo do XML aqui -->
+</loteRFBNFe>
+
+### 5. Upload de Arquivo XML (Multipart Form Data)
+# Nota: Ferramentas de HTTP do VS/Rider suportam envio de arquivos assim:
+POST {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/upload
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="nota.xml"
+Content-Type: application/xml
+
+< ../nota-fiscal.xml
+--boundary--
+
+### 6. Atualizar Metadados do Documento (PATCH)
+PATCH {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/{{FiscalDocumentId}}
+Content-Type: application/json
+
+{
+  "receiverName": "NOME CLIENTE ATUALIZADO",
+  "receiverState": "RJ",
+  "receiverCnpjCpf": "12345678000199"
+}
+
+### 7. Atualizar Documento via Novo XML (PUT)
+PUT {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/upload
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="nota_atualizada.xml"
+Content-Type: application/xml
+
+< ../nota-fiscal.xml
+--boundary--
+
+### 8. Excluir Documento
+DELETE {{SIEGWebApplication_HostAddress}}/{{UrlBase}}/{{FiscalDocumentId}}

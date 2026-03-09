@@ -1,0 +1,34 @@
+name: sieg-backend
+
+services:
+  db:
+    image: postgres:18.2-alpine
+    restart: always
+    container_name: sieg-db
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: sieg-user
+      POSTGRES_PASSWORD: Bk-s1eg-pW
+    volumes:
+      - ./db_schema.sql:/docker-entrypoint-initdb.d/db_schema.sql
+
+  redis:
+    image: bitnami/redis:latest
+    restart: always
+    container_name: sieg-redis
+    ports:
+      - "6397:6379"
+    environment:
+      #- ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PASSWORD=Bk-s1eg-pW
+
+  rabbitmq:
+    image: rabbitmq:4.0-alpine
+    restart: always
+    container_name: sieg-rabbitmq
+    ports:
+      - "5672:5672"   # AMQP protocol
+    environment:
+      - RABBITMQ_DEFAULT_USER=sieg-user
+      - RABBITMQ_DEFAULT_PASS=Bk-s1eg-pW

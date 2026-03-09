@@ -1,0 +1,256 @@
+openapi: 3.0.1
+info:
+  title: SIEG Fiscal Documents API
+  description: API para processamento, armazenamento e gestão de documentos fiscais (NFe, CTe, NFSe).
+  version: v1
+servers:
+  - url: http://localhost:5266
+    description: Servidor de Desenvolvimento
+paths:
+  /api/v1/fiscal-documents:
+    get:
+      tags:
+        - Fiscal Documents
+      summary: Listar documentos com paginação e filtros
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: pageSize
+          in: query
+          schema:
+            type: integer
+            default: 10
+        - name: cnpj
+          in: query
+          schema:
+            type: string
+        - name: uf
+          in: query
+          schema:
+            type: string
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        200:
+          description: Lista de documentos retornada com sucesso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PagedResponse'
+
+  /api/v1/fiscal-documents/{id}:
+    get:
+      tags:
+        - Fiscal Documents
+      summary: Consultar detalhes de um documento específico
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Detalhes do documento
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FiscalDocumentDetail'
+        404:
+          description: Documento não encontrado
+    patch:
+      tags:
+        - Fiscal Documents
+      summary: Atualizar metadados de um documento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FiscalDocumentUpdate'
+      responses:
+        200:
+          description: Documento atualizado com sucesso
+        404:
+          description: Documento não encontrado
+    delete:
+      tags:
+        - Fiscal Documents
+      summary: Excluir um documento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Documento excluído com sucesso
+        404:
+          description: Documento não encontrado
+
+  /api/v1/fiscal-documents/{id}/xml:
+    get:
+      tags:
+        - Fiscal Documents
+      summary: Obter o conteúdo XML original do documento
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        200:
+          description: Conteúdo XML retornado
+          content:
+            application/xml:
+              schema:
+                type: string
+        404:
+          description: Documento não encontrado
+
+  /api/v1/fiscal-documents/xml:
+    post:
+      tags:
+        - Fiscal Documents
+      summary: Criar documento enviando XML no corpo da requisição
+      requestBody:
+        required: true
+        content:
+          application/xml:
+            schema:
+              type: string
+      responses:
+        201:
+          description: Documento criado com sucesso
+        400:
+          description: XML inválido ou malformado
+        409:
+          description: Documento já processado (Idempotência)
+
+  /api/v1/fiscal-documents/upload:
+    post:
+      tags:
+        - Fiscal Documents
+      summary: Criar documento via upload de arquivo XML
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Arquivo processado com sucesso
+        400:
+          description: Erro na validação do arquivo
+    put:
+      tags:
+        - Fiscal Documents
+      summary: Atualizar documento existente via upload de novo XML
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        200:
+          description: Documento atualizado com sucesso
+        404:
+          description: Documento não encontrado para atualização
+
+components:
+  schemas:
+    FiscalDocumentListItem:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        accessKey: { type: string }
+        documentNumber: { type: string }
+        series: { type: string }
+        emissionDate: { type: string, format: date-time }
+        emitterCnpjCpf: { type: string }
+        emitterName: { type: string }
+        emitterState: { type: string }
+        totalValue: { type: number }
+
+    FiscalDocumentDetail:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        accessKey: { type: string }
+        documentType: { type: integer }
+        documentNumber: { type: string }
+        series: { type: string }
+        emissionDate: { type: string, format: date-time }
+        emitterCnpjCpf: { type: string }
+        emitterName: { type: string }
+        emitterState: { type: string }
+        receiverCnpjCpf: { type: string }
+        receiverName: { type: string }
+        receiverState: { type: string }
+        totalValue: { type: number }
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FiscalDocumentItem'
+
+    FiscalDocumentItem:
+      type: object
+      properties:
+        itemNumber: { type: integer }
+        productCode: { type: string }
+        productName: { type: string }
+        ncm: { type: string }
+        cfop: { type: string }
+        unit: { type: string }
+        quantity: { type: number }
+        unitPrice: { type: number }
+        totalPrice: { type: number }
+
+    FiscalDocumentUpdate:
+      type: object
+      properties:
+        receiverName: { type: string }
+        receiverState: { type: string }
+        receiverCnpjCpf: { type: string }
+
+    PagedResponse:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/FiscalDocumentListItem'
+        pageNumber: { type: integer }
+        pageSize: { type: integer }
+        totalItems: { type: integer }
+        totalPages: { type: integer }
