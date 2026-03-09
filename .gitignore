@@ -1,0 +1,29 @@
+﻿# .NET
+bin/
+obj/
+/packages/
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE - Rider & VS
+.idea/
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+riderModule.iml
+/_ReSharper.Caches/
+
+# Docker
+.docker/
+docker-compose.override.yaml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testes e Ferramentas
+load-tests/results/
+*.log
